@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+Ôªø#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION // dodane do pliku z kursu 
 #define GLM_ENABLE_EXPERIMENTAL  // naprawia bledy
@@ -33,20 +33,23 @@ float FOVdeg = 45.0f;           // dystans renderowania
 float nearPlane = 0.1f;     //odleglosc wczytywania terenu, wglab etc
 float farPlane = 100.0f;
 
-glm::vec3 Position = glm::vec3(0.0f, 0.0f, 2.0f);                   //4 defaultowe ustawienia
-glm::vec3 Orientation = glm::vec3(0.0f, 0.0f, -1.0f);
+
+
+glm::vec3 Position = glm::vec3(0.0f, 2.0f, 3.0f);                   //4 defaultowe ustawienia
+glm::vec3 Orientation = glm::vec3(0.0f, -0.22f, -1.0f);
 glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::mat4 cameraMatrix = glm::mat4(1.0f);  //do shadera vert
 
 //Powoduje ze kamera nie skacze podczas klikania
 bool firstClick = true;
+float charSpeed = 0.1f;
 
-//Poprawia szybkoúÊ i czu≥oúÊ podczas obracania
+//Poprawia szybko≈õƒá i czu≈Ço≈õƒá podczas obracania
 float speed = 0.001f;
 float sensitivity = 100.0f;
 //PARAMETRY KAMERY
 
-GLfloat vertices[] = // wierzcho≥ki
+GLfloat vertices[] = // wierzcho≈Çki
 {
     //             KORDY  /    KOLORY                / TEXTURY      /   NORMALS
     -1.0f, 0.0f,  1.0f,		0.0f, 0.0f, 0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
@@ -55,11 +58,13 @@ GLfloat vertices[] = // wierzcho≥ki
      1.0f, 0.0f,  1.0f,		0.0f, 0.0f, 0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f
 };
 
-GLuint indices[] = //Indices - oszczedzanie pamiÍci na sklonowane wierzcho≥ki
+GLuint indices[] = //Indices - oszczedzanie pamiƒôci na sklonowane wierzcho≈Çki
 {
     0, 1, 2, // Dolna scianka
     0, 2, 3, // Dolna scianka
 };
+
+
 
 GLfloat lightVertices[] =
 { //  KORDY
@@ -168,7 +173,7 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window); //ustawia obecne okno
-    gladLoadGL(); //£adowanie glada
+    gladLoadGL(); //≈Åadowanie glada
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);        //generuje szerokosc ekranu od lewo do prawo
 
     // glad: load all OpenGL function pointers
@@ -203,7 +208,7 @@ int main()
 
 
 
-    //Kwadrat obs≥ugujπcy úwiat≥o
+    //Kwadrat obs≈ÇugujƒÖcy ≈õwiat≈Ço
     Shader lightShader("light.vert", "light.frag");
 
     //Generuje VAO i przypisuje
@@ -238,20 +243,35 @@ int main()
     houseVAO.Unbind();
     houseVBO.Unbind();
     houseEBO.Unbind();
-                                      
-    glm::vec4 lightColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);           //defaultowe pozycje modeli rgb+przezroczystosc
 
-    glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);           //defaultowe pozycje modeli rgb+przezroczystosc
+
+    glm::vec3 lightPos = glm::vec3(0.0f, 1.0f, -5.22f);
     glm::mat4 lightModel = glm::mat4(1.0f);
-    lightModel = glm::translate(lightModel, lightPos);          
+    lightModel = glm::translate(lightModel, lightPos);
 
     glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::mat4 pyramidModel = glm::mat4(1.0f);
+    pyramidModel = glm::scale(pyramidModel, glm::vec3(1.0f, 1.0f, 1.0f));
     pyramidModel = glm::translate(pyramidModel, pyramidPos);
 
     glm::vec3 housePos = glm::vec3(3.0f, 0.0f, 3.0f);
     glm::mat4 houseModel = glm::mat4(1.0f);
     houseModel = glm::translate(houseModel, housePos);
+
+    glm::vec3 modelPos = glm::vec3(0.0f, 0.0f, 0.00f);
+    glm::vec3 calculatedModelPos = modelPos;
+    glm::mat4 model = glm::mat4(1.0f);
+
+    //Aktualizuje i eksportuje martix kamery do VertexShadera
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+    //Powoduje ze kamera patrzy sie we wlasciwym kierunku
+    view = glm::lookAt(Position, modelPos, Up);
+    //Dodaje perspektywe do sceny
+    projection = glm::perspective(glm::radians(FOVdeg), (float)(SCR_WIDTH / SCR_HEIGHT), nearPlane, farPlane);
+    //Eksportuje kamere do vertex shadera
+    cameraMatrix = projection * view;
 
     lightShader.use();
     glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel)); //wysylaja do shadera vertexow, pozwala na transformacje obiektow
@@ -267,11 +287,11 @@ int main()
 
     //Texture
 
-    //TEXTURA1-POCZ•TEK
+    //TEXTURA1-POCZƒÑTEK
     unsigned int texture;
     int widthImg, heightImg, numColCh;
     stbi_set_flip_vertically_on_load(true); //Obraca zdjecie
-    unsigned char* bytes = stbi_load("bricks.png", &widthImg, &heightImg, &numColCh, 0); //Czyta zdjecie z pliku i przetrzymuje w bajtach
+    unsigned char* bytes = stbi_load("brick.png", &widthImg, &heightImg, &numColCh, 0); //Czyta zdjecie z pliku i przetrzymuje w bajtach
 
     glGenTextures(1, &texture); //Generuje obiekt tekstury
     glActiveTexture(GL_TEXTURE0); //Przypisz teksture do jednostki Tekstury
@@ -281,11 +301,11 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // GL_NEAREST - tak jak jest
-    // GL_LINEAR - uzupe≥nia brakujπce piksele, co czasami daje efekt blura
+    // GL_LINEAR - uzupe≈Çnia brakujƒÖce piksele, co czasami daje efekt blura
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    //Gdybyúmy chcieli obramowanie textury
+    //Gdyby≈õmy chcieli obramowanie textury
     // float flatColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
     // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
@@ -295,10 +315,10 @@ int main()
     //Odczepienie textury
     stbi_image_free(bytes);
 
-    //Odbinduj teksture øeby przypadkowo nie zmodyfikowaÊ
+    //Odbinduj teksture ≈ºeby przypadkowo nie zmodyfikowaƒá
     glBindTexture(GL_TEXTURE_2D, 0);
-    shaderProgram.use(); //Shader musi byÊ aktywowany przed zmianπ wartoúci uniformu
-    glUniform1f(glGetUniformLocation(shaderProgram.ID, "tex0"), 0); //Ustawia wartoúÊ uniformu
+    shaderProgram.use(); //Shader musi byƒá aktywowany przed zmianƒÖ warto≈õci uniformu
+    glUniform1f(glGetUniformLocation(shaderProgram.ID, "tex0"), 0); //Ustawia warto≈õƒá uniformu
     //TEXTURA1-KONIEC
 
 
@@ -309,6 +329,7 @@ int main()
     // load models
     // -----------
     Model ourModel("../resources/objects/nanosuit/nanosuit.obj");
+
 
     glEnable(GL_DEPTH_TEST);   //glebia zeby nie nachodzily na siebie
 
@@ -326,7 +347,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //oczyszcza bufor
 
 
-        //Obs≥uga klawiszÛw kamery
+        //Obs¬≥uga klawisz√≥w kamery
         Inputs(window);
 
 
@@ -345,33 +366,17 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture);
         shaderProgram.use();
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), Position.x, Position.y, Position.z);  //wysylamy pozycje kamery do shadera
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(cameraMatrix));     
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
 
-       
+
         //planksSpec.Bind();
-        VAO1.Bind(); //Przypisz VAO øeby OpenGL go uøywa≥
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0); //Narysuj trÛjkπt uøywajπc GL_TRIANGLE
+        VAO1.Bind(); //Przypisz VAO ¬øeby OpenGL go u¬øywa¬≥
+        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0); //Narysuj tr√≥jk¬πt u¬øywaj¬πc GL_TRIANGLE
 
 
 
 
         houseShader.use();
-
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            houseModel = glm::translate(houseModel, glm::vec3(0.00f, 0.00f, -0.01f));  //translate przemieszczanie, rotate obracanie
-        }
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            houseModel = glm::translate(houseModel, glm::vec3(0.01f, 0.00f, 0.0f));
-        }
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            houseModel = glm::translate(houseModel, glm::vec3(-0.01f, 0.00f, 0.0f));
-        }
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            houseModel = glm::translate(houseModel, glm::vec3(0.00f, 0.00f, 0.01f));
-        }
-        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
-            houseModel = glm::rotate(houseModel, glm::radians(0.01f), glm::vec3(0.0f,0.0f,1.0f));   //rotacja
-        }
 
         glUniformMatrix4fv(glGetUniformLocation(houseShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(houseModel));     //wyslanie do shadera 
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(cameraMatrix)); // i kamere
@@ -379,12 +384,9 @@ int main()
 
         houseVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(houseIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
-      
+
 
         lightShader.use();
-        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-            lightModel = glm::translate(lightModel, glm::vec3(0.00f, 0.00f, 0.01f));
-        }
         glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
@@ -400,12 +402,90 @@ int main()
         // view/projection transformations
         glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
 
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            modelPos.z -= 0.01f;
+            cout << "X:" + std::to_string(modelPos.x);
+            cout << "Y:" + std::to_string(modelPos.y);
+            cout << "Z:" + std::to_string(modelPos.z) << endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            modelPos.x -= 0.01f;
+            cout << "X:" + std::to_string(modelPos.x);
+            cout << "Y:" + std::to_string(modelPos.y);
+            cout << "Z:" + std::to_string(modelPos.z) << endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            modelPos.x += 0.01f;
+            cout << "X:" + std::to_string(modelPos.x);
+            cout << "Y:" + std::to_string(modelPos.y);
+            cout << "Z:" + std::to_string(modelPos.z) << endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            modelPos.z += 0.01f;
+            cout << "X:" + std::to_string(modelPos.x);
+            cout << "Y:" + std::to_string(modelPos.y);
+            cout << "Z:" + std::to_string(modelPos.z) << endl;
+        }
+        
+
+        //KOLEJNO≈öƒÜ MA ZNACZENIE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        model = glm::mat4(1.f);
+        model = glm::translate(model, modelPos);
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));   //rotacja
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
+
+
+
+
+
+        // don't forget to enable shader before setting uniforms
+        lightShader.use();
+
+        // view/projection transformations
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+
+
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+            lightPos.z -= 0.01f;
+            cout << "X:" + std::to_string(lightPos.x);
+            cout << "Y:" + std::to_string(lightPos.y);
+            cout << "Z:" + std::to_string(lightPos.z) << endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+            lightPos.z += 0.01f;
+            cout << "X:" + std::to_string(lightPos.x);
+            cout << "Y:" + std::to_string(lightPos.y);
+            cout << "Z:" + std::to_string(lightPos.z) << endl;
+        }
+
+        // tutaj jakƒÖ≈õ pƒôtle trzeba zrobic ≈ºeby wraca≈Ça ta przeszkoda bo to nie dzia≈Ça //////////////////////////////////
+        if (float2fixed(lightPos.z) > 2) {
+            glm::vec3 lightPos = glm::vec3(0.0f, 1.0f, -5.22f);
+            glm::mat4 lightModel = glm::mat4(1.0f);
+            lightModel = glm::translate(lightModel, lightPos);
+
+        }
+
+
+        if (float2fixed (modelPos.z) == float2fixed(lightPos.z) && float2fixed(modelPos.x) == float2fixed(lightPos.x)) {
+            printf("WARNING!!!");
+        }
+
+
+        //KOLEJNO≈öƒÜ MA ZNACZENIE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        lightModel = glm::mat4(1.f);
+        lightModel = glm::translate(lightModel, lightPos);
+        lightModel = glm::rotate(lightModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));   //rotacja
+        lightModel = glm::scale(lightModel, glm::vec3(10.1f, 0.1f, 0.1f));
+        ourShader.setMat4("model", lightModel);
+        ourModel.Draw(ourShader);
+
+        
+
+
+
 
 
 
@@ -448,13 +528,13 @@ void Inputs(GLFWwindow* window)
         speed = 0.001f;
     }
 
-    //Obs≥uga myszy   
+    //Obs≈Çuga myszy   
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
     {
         //Ukrywa kursor
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-        //Powoduje øe kamera nie skacze gdy klikamy
+        //Powoduje ≈ºe kamera nie skacze gdy klikamy
         if (firstClick)
         {
             glfwSetCursorPos(window, (SCR_WIDTH / 2), (SCR_HEIGHT / 2));
@@ -467,15 +547,15 @@ void Inputs(GLFWwindow* window)
         //Przechwytuje kordyynaty myszki
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
-        //Normalizuje kordynaty tak øeby zaczyna≥y siÍ na úrodku ekranu
+        //Normalizuje kordynaty tak ≈ºeby zaczyna≈Çy siƒô na ≈õrodku ekranu
         // wtedy transformuje je na stopnie(degrees)
         float rotx = sensitivity * (float)(mouseY - (SCR_HEIGHT / 2)) / SCR_HEIGHT;
         float roty = sensitivity * (float)(mouseX - (SCR_HEIGHT / 2)) / SCR_HEIGHT;
 
-        //Kalkuluje nadchodzπcπ zmiane wertykalnπ w Orientation
+        //Kalkuluje nadchodzƒÖcƒÖ zmiane wertykalnƒÖ w Orientation
         glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotx), glm::normalize(glm::cross(Orientation, Up)));
 
-        //Decyzja czy zmiana jest dozwolona czy teø nie
+        //Decyzja czy zmiana jest dozwolona czy te≈º nie
         if (!((glm::angle(newOrientation, Up) <= glm::radians(5.0f)) or (glm::angle(newOrientation, -Up) <= glm::radians(5.0f)))) {
             Orientation = newOrientation;
         }
@@ -483,7 +563,7 @@ void Inputs(GLFWwindow* window)
         //Obraca w prawo i lewo
         Orientation = glm::rotate(Orientation, glm::radians(-roty), Up);
 
-        //Ustawia kursor na úrodku ekranu
+        //Ustawia kursor na ≈õrodku ekranu
         glfwSetCursorPos(window, (SCR_WIDTH / 2), (SCR_HEIGHT / 2));
 
     }
@@ -491,7 +571,7 @@ void Inputs(GLFWwindow* window)
     {
         //Przywraca kursor
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        //Powoduje øe jest pewnoúÊ øe kamera nie bÍdzie skaka≥a przy kolejnym obracaniu
+        //Powoduje ≈ºe jest pewno≈õƒá ≈ºe kamera nie bƒôdzie skaka≈Ça przy kolejnym obracaniu
         firstClick = true;
     }
 }
